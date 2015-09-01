@@ -286,7 +286,7 @@ static void set_normal_mode(struct net_device *dev)
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
 
-	netdev_err(dev, "setting SUNXI_CAN into normal mode failed!\n");
+	netdev_err(dev, "setting controller into normal mode failed!\n");
 }
 
 static void set_reset_mode(struct net_device *dev)
@@ -309,7 +309,7 @@ static void set_reset_mode(struct net_device *dev)
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
 
-	netdev_err(dev, "setting SUNXI_CAN into reset mode failed!\n");
+	netdev_err(dev, "setting controller into reset mode failed!\n");
 }
 
 static int sunxican_set_bittiming(struct net_device *dev)
@@ -354,6 +354,10 @@ static void sunxi_can_start(struct net_device *dev)
 	if (priv->can.state != CAN_STATE_STOPPED)
 		set_reset_mode(dev);
 
+	/* set filters - we accept all */
+	writel(0x00000000, priv->base + CAN_ACPC_ADDR);
+	writel(0xffffffff, priv->base + CAN_ACPM_ADDR);
+
 	/* Clear error counters and error code capture */
 	writel(0x0, priv->base + CAN_ERRC_ADDR);
 
@@ -397,15 +401,8 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	uint32_t temp = 0;
 	uint8_t i;
 
-	/* wait buff ready */
+	/* wait buffer ready */
 	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY)) ;
-
-	set_reset_mode(dev);
-
-	writel(0xffffffff, priv->base + CAN_ACPM_ADDR);
-
-	/* enter transfer mode */
-	set_normal_mode(dev);
 
 	if (can_dropped_invalid_skb(dev, skb))
 		return NETDEV_TX_OK;
@@ -437,8 +434,6 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	}
 
 	can_put_echo_skb(skb, dev, 0);
-
-	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY)) ;
 	sunxi_can_write_cmdreg(priv, TRANS_REQ);
 
 	return NETDEV_TX_OK;
@@ -686,7 +681,6 @@ static int sunxican_open(struct net_device *dev)
 
 	sunxican_set_bittiming(dev);
 	sunxi_can_start(dev);
-	priv->open_time = jiffies;
 
 	netif_start_queue(dev);
 
@@ -830,7 +824,6 @@ static int sunxican_probe(struct platform_device *pdev)
 	temp_irqen = BERR_IRQ_EN | ERR_PASSIVE_IRQ_EN | OR_IRQ_EN | RX_IRQ_EN;
 	writel(readl(priv->base + CAN_INTEN_ADDR) | temp_irqen,
 	       priv->base + CAN_INTEN_ADDR);
-	set_normal_mode(dev);
 
 	platform_set_drvdata(pdev, dev);
 	SET_NETDEV_DEV(dev, &pdev->dev);
