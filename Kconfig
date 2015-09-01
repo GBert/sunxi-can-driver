@@ -1,4 +1,4 @@
-config CAN_SUN7I
+config CAN_SUNXI
         tristate "Sun7i CAN bus controller"
         default n
         help
