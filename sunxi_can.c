@@ -1,15 +1,15 @@
 /*
  * sunxi_can.c - CAN bus controller driver for Allwinner SUN4I&SUN7I based SoCs
  *
- * Copyright (c) 2013 Peter Chen
- * Copyright (c) 2015 Gerhard Bertelsmann
+ * Copyright (C) 2013 Peter Chen
+ * Copyright (C) 2015 Gerhard Bertelsmann
  *   
  * Parts of this software are based on (derived from) the SJA1000 code by:
+ *   Copyright (C) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
  *   Copyright (C) 2007 Wolfgang Grandegger <wg@grandegger.com>
- *   Copyright (c) 2002-2007 Volkswagen Group Electronic Research
- *   Copyright (c) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
+ *   Copyright (C) 2002-2007 Volkswagen Group Electronic Research
+ *   Copyright (C) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
  *   38106 Braunschweig, GERMANY
- *   Copyright (c) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the version 2 of the GNU General Public License
@@ -55,6 +55,7 @@
 #include <linux/can.h>
 #include <linux/can/dev.h>
 #include <linux/can/error.h>
+#include <linux/can/led.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
@@ -66,7 +67,7 @@
 #include <linux/platform_device.h>
 
 #define DRV_NAME "sunxi_can"
-#define DRV_MODULE_VERSION "0.90"
+#define DRV_MODULE_VERSION "0.91"
 
 /* Registers address */
 #define CAN_BASE0		0x01C2BC00
@@ -128,7 +129,7 @@
 #define FORM_ERR		(0x01<<22)
 #define STUFF_ERR		(0x02<<22)
 #define OTHER_ERR		(0x03<<22)
-#define ERR_DIR			(0x01<<21)
+#define ERR_DIR			BIT(21)
 #define ERR_SEG_CODE		(0x1f<<16)
 #define START			(0x03<<16)
 #define ID28_21			(0x02<<16)
@@ -187,10 +188,6 @@
 #define TX_IRQ_EN		BIT(1)
 #define RX_IRQ_EN		BIT(0)
 
-/* output control */
-#define NOR_OMODE		(2)
-#define CLK_OMODE		(3)
-
 /* error code */
 #define ERR_INRCV		(0x1<<5)
 #define ERR_INTRANS		(0x0<<5)
@@ -200,8 +197,6 @@
 #define SINGLE_FLTER_MODE	1
 #define DUAL_FILTER_MODE	2
 
-#define SW_INT_IRQNO_CAN	26
-#define CLK_MOD_CANi		"can"
 #define SUNXI_CAN_MAX_IRQ	20	/* max. number of interrupts handled in ISR */
 
 struct sunxican_priv {
@@ -251,7 +246,7 @@ static void sunxi_can_write_cmdreg(struct sunxican_priv *priv, u8 val)
 static void set_normal_mode(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	unsigned char status = readl(priv->base + CAN_MSEL_ADDR);
+	u8 status = readl(priv->base + CAN_MSEL_ADDR);
 	int i;
 
 	for (i = 0; i < 100; i++) {
@@ -293,7 +288,7 @@ static void set_normal_mode(struct net_device *dev)
 static void set_reset_mode(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	uint32_t status = readl(priv->base + CAN_MSEL_ADDR);
+	u8 status = readl(priv->base + CAN_MSEL_ADDR);
 	int i;
 
 	for (i = 0; i < 100; i++) {
@@ -397,13 +392,14 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	struct can_frame *cf = (struct can_frame *)skb->data;
-	uint8_t dlc;
+	u8 dlc;
 	canid_t id;
-	uint32_t temp = 0;
-	uint8_t i;
+	u32 temp = 0;
+	int i;
 
 	/* wait buffer ready */
-	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY)) ;
+	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY))
+		usleep_range(10,100);
 
 	if (can_dropped_invalid_skb(dev, skb))
 		return NETDEV_TX_OK;
@@ -446,7 +442,7 @@ static void sunxi_can_rx(struct net_device *dev)
 	struct net_device_stats *stats = &dev->stats;
 	struct can_frame *cf;
 	struct sk_buff *skb;
-	uint8_t fi;
+	u8 fi;
 	canid_t id;
 	int i;
 
@@ -497,16 +493,18 @@ static void sunxi_can_rx(struct net_device *dev)
 
 	stats->rx_packets++;
 	stats->rx_bytes += cf->can_dlc;
+
+	can_led_event(dev, CAN_LED_EVENT_RX);
 }
 
-static int sunxi_can_err(struct net_device *dev, uint8_t isrc, uint8_t status)
+static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	struct net_device_stats *stats = &dev->stats;
 	struct can_frame *cf;
 	struct sk_buff *skb;
 	enum can_state state = priv->can.state;
-	uint32_t ecc, alc;
+	u32 ecc, alc;
 
 	skb = alloc_can_err_skb(dev, &cf);
 	if (skb == NULL)
@@ -578,9 +576,9 @@ static int sunxi_can_err(struct net_device *dev, uint8_t isrc, uint8_t status)
 
 	if (state != priv->can.state && (state == CAN_STATE_ERROR_WARNING ||
 					 state == CAN_STATE_ERROR_PASSIVE)) {
-		uint8_t rxerr =
+		u8 rxerr =
 		    (readl(priv->base + CAN_ERRC_ADDR) >> 16) & 0xFF;
-		uint8_t txerr = readl(priv->base + CAN_ERRC_ADDR) & 0xFF;
+		u8 txerr = readl(priv->base + CAN_ERRC_ADDR) & 0xFF;
 		cf->can_id |= CAN_ERR_CRTL;
 		if (state == CAN_STATE_ERROR_WARNING) {
 			priv->can.can_stats.error_warning++;
@@ -610,7 +608,7 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 	struct net_device *dev = (struct net_device *)dev_id;
 	struct sunxican_priv *priv = netdev_priv(dev);
 	struct net_device_stats *stats = &dev->stats;
-	uint8_t isrc, status;
+	u8 isrc, status;
 	int n = 0;
 
 	/* Shared interrupts and IRQ off? */
@@ -632,6 +630,7 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 			stats->tx_packets++;
 			can_get_echo_skb(dev, 0);
 			netif_wake_queue(dev);
+			can_led_event(dev, CAN_LED_EVENT_TX);
 		}
 		if (isrc & RBUF_VLD) {
 			/* receive interrupt */
@@ -683,6 +682,8 @@ static int sunxican_open(struct net_device *dev)
 	sunxican_set_bittiming(dev);
 	sunxi_can_start(dev);
 
+	can_led_event(dev, CAN_LED_EVENT_OPEN);
+
 	netif_start_queue(dev);
 
 	return 0;
@@ -690,8 +691,6 @@ static int sunxican_open(struct net_device *dev)
 
 static int sunxican_close(struct net_device *dev)
 {
-	struct sunxican_priv *priv = netdev_priv(dev);
-
 	netif_stop_queue(dev);
 	set_reset_mode(dev);
 
@@ -699,7 +698,7 @@ static int sunxican_close(struct net_device *dev)
 
 	close_candev(dev);
 
-	priv->open_time = 0;
+	can_led_event(dev, CAN_LED_EVENT_STOP);
 
 	return 0;
 }
@@ -835,6 +834,8 @@ static int sunxican_probe(struct platform_device *pdev)
 			DRV_NAME, err);
 		goto exit_free;
 	}
+
+	devm_can_led_init(dev);
 
 	dev_info(&pdev->dev, "device registered (base=%p, irq=%d)\n",
 		 priv->base, dev->irq);
