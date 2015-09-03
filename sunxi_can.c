@@ -3,14 +3,14 @@
  *
  * Copyright (C) 2013 Peter Chen
  * Copyright (C) 2015 Gerhard Bertelsmann
- *   
+ *
  * Parts of this software are based on (derived from) the SJA1000 code by:
  *   Copyright (C) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
  *   Copyright (C) 2007 Wolfgang Grandegger <wg@grandegger.com>
  *   Copyright (C) 2002-2007 Volkswagen Group Electronic Research
  *   Copyright (C) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
  *   38106 Braunschweig, GERMANY
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the version 2 of the GNU General Public License
  * as published by the Free Software Foundation
@@ -23,32 +23,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
- *
- * To use the driver CAN must be defined like:
- *  soc@01c00000 {
- *    ...
- *    pio: pinctrl@01c20800 {
- *      ...
- *      can0_pins_a: can0@0 {
- *        allwinner,pins = "PH20","PH21";
- *        allwinner,function = "can";
- *        allwinner,drive = <0>;
- *        allwinner,pull = <0>;
- *      };
- *    };
- *    ...
- *    can0: can@01c2bc00 {
- *      compatible = "allwinner,sunxican";
- *      reg = <0x01c2bc00 0x400>;
- *      reg-io-width = <4>;
- *      interrupts = <0 26 4>;
- *      clocks = <&apb1_gates 4>;
- *      #address-cells = <1>;
- *      #size-cells = <0>;
- *    };
- *    ...
- *  };
- *   
  */
 
 #include <linux/netdevice.h>
@@ -67,47 +41,47 @@
 #include <linux/platform_device.h>
 
 #define DRV_NAME "sunxi_can"
-#define DRV_MODULE_VERSION "0.92"
+#define DRV_MODULE_VERSION "0.94"
 
 /* Registers address */
 #define CAN_BASE0		0x01C2BC00
-#define CAN_MSEL_ADDR		0x0000	/* CAN Mode Select Register */
-#define CAN_CMD_ADDR            0x0004	/* CAN Command Register */
-#define CAN_STA_ADDR		0x0008	/* CAN Status Register */
-#define CAN_INT_ADDR		0x000c	/* CAN Interrupt Flag Register */
-#define CAN_INTEN_ADDR		0x0010	/* CAN Interrupt Enable Register */
-#define CAN_BTIME_ADDR		0x0014	/* CAN Bus Timing 0 Register */
-#define CAN_TEWL_ADDR		0x0018	/* CAN Tx Error Warning Limit Register */
-#define CAN_ERRC_ADDR		0x001c	/* CAN Error Counter Register */
-#define CAN_RMCNT_ADDR		0x0020	/* CAN Receive Message Counter Register */
-#define CAN_RBUFSA_ADDR		0x0024	/* CAN Receive Buffer Start Address Register */
-#define CAN_BUF0_ADDR		0x0040	/* CAN Tx/Rx Buffer 0 Register */
-#define CAN_BUF1_ADDR		0x0044	/* CAN Tx/Rx Buffer 1 Register */
-#define CAN_BUF2_ADDR		0x0048	/* CAN Tx/Rx Buffer 2 Register */
-#define CAN_BUF3_ADDR		0x004c	/* CAN Tx/Rx Buffer 3 Register */
-#define CAN_BUF4_ADDR		0x0050	/* CAN Tx/Rx Buffer 4 Register */
-#define CAN_BUF5_ADDR		0x0054	/* CAN Tx/Rx Buffer 5 Register */
-#define CAN_BUF6_ADDR		0x0058	/* CAN Tx/Rx Buffer 6 Register */
-#define CAN_BUF7_ADDR		0x005c	/* CAN Tx/Rx Buffer 7 Register */
-#define CAN_BUF8_ADDR		0x0060	/* CAN Tx/Rx Buffer 8 Register */
-#define CAN_BUF9_ADDR		0x0064	/* CAN Tx/Rx Buffer 9 Register */
-#define CAN_BUF10_ADDR		0x0068	/* CAN Tx/Rx Buffer 10 Register */
-#define CAN_BUF11_ADDR		0x006c	/* CAN Tx/Rx Buffer 11 Register */
-#define CAN_BUF12_ADDR		0x0070	/* CAN Tx/Rx Buffer 12 Register */
-#define CAN_ACPC_ADDR		0x0040	/* CAN Acceptance Code 0 Register */
-#define CAN_ACPM_ADDR		0x0044	/* CAN Acceptance Mask 0 Register */
-#define CAN_RBUF_RBACK_START_ADDR	+ 0x0180	/* CAN transmit buffer for read back register */
-#define CAN_RBUF_RBACK_END_ADDR		+ 0x01b0	/* CAN transmit buffer for read back register */
+#define CAN_MSEL_ADDR		0x0000	/* CAN Mode Select */
+#define CAN_CMD_ADDR            0x0004	/* CAN Command */
+#define CAN_STA_ADDR		0x0008	/* CAN Status */
+#define CAN_INT_ADDR		0x000c	/* CAN Interrupt Flag */
+#define CAN_INTEN_ADDR		0x0010	/* CAN Interrupt Enable */
+#define CAN_BTIME_ADDR		0x0014	/* CAN Bus Timing 0 */
+#define CAN_TEWL_ADDR		0x0018	/* CAN Tx Error Warning Limit */
+#define CAN_ERRC_ADDR		0x001c	/* CAN Error Counter */
+#define CAN_RMCNT_ADDR		0x0020	/* CAN Receive Message Counter */
+#define CAN_RBUFSA_ADDR		0x0024	/* CAN Receive Buffer Start Address */
+#define CAN_BUF0_ADDR		0x0040	/* CAN Tx/Rx Buffer 0 */
+#define CAN_BUF1_ADDR		0x0044	/* CAN Tx/Rx Buffer 1 */
+#define CAN_BUF2_ADDR		0x0048	/* CAN Tx/Rx Buffer 2 */
+#define CAN_BUF3_ADDR		0x004c	/* CAN Tx/Rx Buffer 3 */
+#define CAN_BUF4_ADDR		0x0050	/* CAN Tx/Rx Buffer 4 */
+#define CAN_BUF5_ADDR		0x0054	/* CAN Tx/Rx Buffer 5 */
+#define CAN_BUF6_ADDR		0x0058	/* CAN Tx/Rx Buffer 6 */
+#define CAN_BUF7_ADDR		0x005c	/* CAN Tx/Rx Buffer 7 */
+#define CAN_BUF8_ADDR		0x0060	/* CAN Tx/Rx Buffer 8 */
+#define CAN_BUF9_ADDR		0x0064	/* CAN Tx/Rx Buffer 9 */
+#define CAN_BUF10_ADDR		0x0068	/* CAN Tx/Rx Buffer 10 */
+#define CAN_BUF11_ADDR		0x006c	/* CAN Tx/Rx Buffer 11 */
+#define CAN_BUF12_ADDR		0x0070	/* CAN Tx/Rx Buffer 12 */
+#define CAN_ACPC_ADDR		0x0040	/* CAN Acceptance Code 0 */
+#define CAN_ACPM_ADDR		0x0044	/* CAN Acceptance Mask 0 */
+#define CAN_RBUF_RBACK_START_ADDR	0x0180	/* CAN transmit buffer start */
+#define CAN_RBUF_RBACK_END_ADDR		0x01b0	/* CAN transmit buffer end */
 
 /* Controller Register Description */
 
 /* mode select register (r/w)
  * offset:0x0000 default:0x0000_0001
  */
-#define SLEEP_MODE		(0x01<<4)	/* This bit can only be written in Reset Mode */
-#define WAKE_UP			(0x00<<4)
-#define SINGLE_FILTER		(0x01<<3)	/* This bit can only be written in Reset Mode */
-#define DUAL_FILTERS		(0x00<<3)
+#define SLEEP_MODE		(0x01 << 4)	/* write in reset mode */
+#define WAKE_UP			(0x00 << 4)
+#define SINGLE_FILTER		(0x01 << 3)	/* write in reset mode */
+#define DUAL_FILTERS		(0x00 << 3)
 #define LOOPBACK_MODE		BIT(2)
 #define LISTEN_ONLY_MODE	BIT(1)
 #define RESET_MODE		BIT(0)
@@ -125,36 +99,36 @@
 /* status register (r)
  * offset:0x0008 default:0x0000_003c
  */
-#define BIT_ERR			(0x00<<22)
-#define FORM_ERR		(0x01<<22)
-#define STUFF_ERR		(0x02<<22)
-#define OTHER_ERR		(0x03<<22)
+#define BIT_ERR			(0x00 << 22)
+#define FORM_ERR		(0x01 << 22)
+#define STUFF_ERR		(0x02 << 22)
+#define OTHER_ERR		(0x03 << 22)
 #define ERR_DIR			BIT(21)
-#define ERR_SEG_CODE		(0x1f<<16)
-#define START			(0x03<<16)
-#define ID28_21			(0x02<<16)
-#define ID20_18			(0x06<<16)
-#define SRTR			(0x04<<16)
-#define IDE			(0x05<<16)
-#define ID17_13			(0x07<<16)
-#define ID12_5			(0x0f<<16)
-#define ID4_0			(0x0e<<16)
-#define RTR			(0x0c<<16)
-#define RB1			(0x0d<<16)
-#define RB0			(0x09<<16)
-#define DLEN			(0x0b<<16)
-#define DATA_FIELD		(0x0a<<16)
-#define CRC_SEQUENCE		(0x08<<16)
-#define CRC_DELIMITER		(0x18<<16)
-#define ACK			(0x19<<16)
-#define ACK_DELIMITER		(0x1b<<16)
-#define END			(0x1a<<16)
-#define INTERMISSION		(0x12<<16)
-#define ACTIVE_ERROR		(0x11<<16)
-#define PASSIVE_ERROR		(0x16<<16)
-#define TOLERATE_DOMINANT_BITS	(0x13<<16)
-#define ERROR_DELIMITER		(0x17<<16)
-#define OVERLOAD		(0x1c<<16)
+#define ERR_SEG_CODE		(0x1f << 16)
+#define START			(0x03 << 16)
+#define ID28_21			(0x02 << 16)
+#define ID20_18			(0x06 << 16)
+#define SRTR			(0x04 << 16)
+#define IDE			(0x05 << 16)
+#define ID17_13			(0x07 << 16)
+#define ID12_5			(0x0f << 16)
+#define ID4_0			(0x0e << 16)
+#define RTR			(0x0c << 16)
+#define RB1			(0x0d << 16)
+#define RB0			(0x09 << 16)
+#define DLEN			(0x0b << 16)
+#define DATA_FIELD		(0x0a << 16)
+#define CRC_SEQUENCE		(0x08 << 16)
+#define CRC_DELIMITER		(0x18 << 16)
+#define ACK			(0x19 << 16)
+#define ACK_DELIMITER		(0x1b << 16)
+#define END			(0x1a << 16)
+#define INTERMISSION		(0x12 << 16)
+#define ACTIVE_ERROR		(0x11 << 16)
+#define PASSIVE_ERROR		(0x16 << 16)
+#define TOLERATE_DOMINANT_BITS	(0x13 << 16)
+#define ERROR_DELIMITER		(0x17 << 16)
+#define OVERLOAD		(0x1c << 16)
 #define BUS_OFF			BIT(7)
 #define ERR_STA			BIT(6)
 #define TRANS_BUSY		BIT(5)
@@ -189,32 +163,23 @@
 #define RX_IRQ_EN		BIT(0)
 
 /* error code */
-#define ERR_INRCV		(0x1<<5)
-#define ERR_INTRANS		(0x0<<5)
+#define ERR_INRCV		(0x1 << 5)
+#define ERR_INTRANS		(0x0 << 5)
 
 /* filter mode */
 #define FILTER_CLOSE		0
 #define SINGLE_FLTER_MODE	1
 #define DUAL_FILTER_MODE	2
 
-#define SUNXI_CAN_MAX_IRQ	20	/* max. number of interrupts handled in ISR */
+/* max. number of interrupts handled in ISR */
+#define SUNXI_CAN_MAX_IRQ	20
 
 struct sunxican_priv {
 	struct can_priv can;
-	struct net_device *dev;
-	struct napi_struct napi;
-
-	int open_time;
 	struct sk_buff *echo_skb;
 	void __iomem *base;
 	struct clk *clk;
-
-	void *priv;		/* for board-specific data */
-
-	unsigned long irq_flags;	/* for request_irq() */
 	spinlock_t cmdreg_lock;	/* lock for concurrent cmd register writes */
-
-	u16 flags;		/* custom mode flags */
 };
 
 static const struct can_bittiming_const sunxican_bittiming_const = {
@@ -233,10 +198,9 @@ static void sunxi_can_write_cmdreg(struct sunxican_priv *priv, u8 val)
 {
 	unsigned long flags;
 
-	/*
-	 * The command register needs some locking and time to settle
-	 * the write_reg() operation - especially on SMP systems.
-	 */
+	 /* The command register needs some locking and time to settle
+	  * the write_reg() operation - especially on SMP systems.
+	  */
 	spin_lock_irqsave(&priv->cmdreg_lock, flags);
 	writel(val, priv->base + CAN_CMD_ADDR);
 	readl(priv->base + CAN_STA_ADDR);
@@ -266,7 +230,8 @@ static void set_normal_mode(struct net_device *dev)
 				writel(readl(priv->base + CAN_MSEL_ADDR) |
 				       LOOPBACK_MODE,
 				       priv->base + CAN_MSEL_ADDR);
-			} else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) {
+			} else if
+				(priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) {
 				/* Put device into listen-only mode */
 				writel(readl(priv->base + CAN_MSEL_ADDR) |
 				       LISTEN_ONLY_MODE,
@@ -277,7 +242,6 @@ static void set_normal_mode(struct net_device *dev)
 		/* set chip to normal mode */
 		writel(readl(priv->base + CAN_MSEL_ADDR) & (~RESET_MODE),
 		       priv->base + CAN_MSEL_ADDR);
-		udelay(10);
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
 	netdev_err(dev, "setting controller into normal mode failed!\n");
@@ -295,9 +259,9 @@ static void set_reset_mode(struct net_device *dev)
 			priv->can.state = CAN_STATE_STOPPED;
 			return;
 		}
-
-		writel(readl(priv->base + CAN_MSEL_ADDR) | RESET_MODE, priv->base + CAN_MSEL_ADDR);	/* select reset mode */
-		udelay(10);
+		/* select reset mode */
+		writel(readl(priv->base + CAN_MSEL_ADDR) |
+			RESET_MODE, priv->base + CAN_MSEL_ADDR);
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
 	netdev_err(dev, "setting controller into reset mode failed!\n");
@@ -331,6 +295,7 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	u32 errors;
+
 	errors = readl(priv->base + CAN_ERRC_ADDR);
 	bec->txerr = errors & 0x000F;
 	bec->rxerr = (errors >> 16) & 0x000F;
@@ -358,11 +323,6 @@ static void sunxi_can_start(struct net_device *dev)
 
 static int sunxican_set_mode(struct net_device *dev, enum can_mode mode)
 {
-	struct sunxican_priv *priv = netdev_priv(dev);
-
-	if (!priv->open_time)
-		return -EINVAL;
-
 	switch (mode) {
 	case CAN_MODE_START:
 		sunxi_can_start(dev);
@@ -376,8 +336,7 @@ static int sunxican_set_mode(struct net_device *dev, enum can_mode mode)
 	return 0;
 }
 
-/*
- * transmit a CAN message
+/* transmit a CAN message
  * message layout in the sk_buff should be like this:
  * xx xx xx xx         ff         ll 00 11 22 33 44 55 66 77
  * [ can_id ] [flags] [len] [can data (up to 8 bytes]
@@ -405,23 +364,24 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	temp = ((id >> 30) << 6) | dlc;
 	writel(temp, priv->base + CAN_BUF0_ADDR);
-	if (id & CAN_EFF_FLAG) {	/* extended frame */
-		writel((id >> 21) & 0xFF, priv->base + CAN_BUF1_ADDR);	/* id28~21 */
-		writel((id >> 13) & 0xFF, priv->base + CAN_BUF2_ADDR);	/* id20~13 */
-		writel((id >> 5)  & 0xFF, priv->base + CAN_BUF3_ADDR);	/* id12~5  */
-		writel((id & 0x1F) << 3,  priv->base + CAN_BUF4_ADDR);	/* id4~0   */
+	if (id & CAN_EFF_FLAG) {
+		/* extended frame */
+		writel((id >> 21) & 0xFF, priv->base + CAN_BUF1_ADDR);
+		writel((id >> 13) & 0xFF, priv->base + CAN_BUF2_ADDR);
+		writel((id >> 5)  & 0xFF, priv->base + CAN_BUF3_ADDR);
+		writel((id & 0x1F) << 3,  priv->base + CAN_BUF4_ADDR);
 
 		for (i = 0; i < dlc; i++) {
 			writel(cf->data[i],
 			       priv->base + (CAN_BUF5_ADDR + i * 4));
 		}
-	} else {		/* standard frame */
-		writel((id >> 3) & 0xFF, priv->base + CAN_BUF1_ADDR);	/* id28~21 */
-		writel((id & 0x7) << 5, priv->base + CAN_BUF2_ADDR);	/* id20~13 */
+	} else {
+		/* standard frame */
+		writel((id >> 3) & 0xFF, priv->base + CAN_BUF1_ADDR);
+		writel((id & 0x7) << 5, priv->base + CAN_BUF2_ADDR);
 
-		for (i = 0; i < dlc; i++) {
+		for (i = 0; i < dlc; i++)
 			writel(cf->data[i], priv->base + CAN_BUF3_ADDR + i * 4);
-		}
 	}
 	can_put_echo_skb(skb, dev, 0);
 	sunxi_can_write_cmdreg(priv, TRANS_REQ);
@@ -441,36 +401,36 @@ static void sunxi_can_rx(struct net_device *dev)
 
 	/* create zero'ed CAN frame buffer */
 	skb = alloc_can_skb(dev, &cf);
-	if (skb == NULL)
+	if (!skb)
 		return;
 
 	fi = readl(priv->base + CAN_BUF0_ADDR);
 	cf->can_dlc = get_can_dlc(fi & 0x0F);
 	if (fi >> 7) {
 		/* extended frame format (EFF) */
-		id = (readl(priv->base + CAN_BUF1_ADDR) << 21) |	/* id28~21 */
-		     (readl(priv->base + CAN_BUF2_ADDR) << 13) |	/* id20~13 */
-		     (readl(priv->base + CAN_BUF3_ADDR) << 5)  |	/* id12~5  */
-		    ((readl(priv->base + CAN_BUF4_ADDR) >> 3) & 0x1f);	/* id4~0   */
+		id = (readl(priv->base + CAN_BUF1_ADDR) << 21) |
+		     (readl(priv->base + CAN_BUF2_ADDR) << 13) |
+		     (readl(priv->base + CAN_BUF3_ADDR) << 5)  |
+		    ((readl(priv->base + CAN_BUF4_ADDR) >> 3) & 0x1f);
 		id |= CAN_EFF_FLAG;
 
 		/* remote transmission request ? */
-		if ((fi >> 6) & 0x1)
+		if ((fi >> 6) & 0x1) {
 			id |= CAN_RTR_FLAG;
-		else {
+		} else {
 			for (i = 0; i < cf->can_dlc; i++)
 				cf->data[i] =
 				    readl(priv->base + CAN_BUF5_ADDR + i * 4);
 		}
 	} else {
 		/* standard frame format (SFF) */
-		id = (readl(priv->base + CAN_BUF1_ADDR) << 3) |		/* id28~21 */
-		    ((readl(priv->base + CAN_BUF2_ADDR) >> 5) & 0x7);	/* id20~18 */
+		id = (readl(priv->base + CAN_BUF1_ADDR) << 3) |
+		    ((readl(priv->base + CAN_BUF2_ADDR) >> 5) & 0x7);
 
 		/* remote transmission request ? */
-		if ((fi >> 6) & 0x1)
+		if ((fi >> 6) & 0x1) {
 			id |= CAN_RTR_FLAG;
-		else {
+		} else {
 			for (i = 0; i < cf->can_dlc; i++)
 				cf->data[i] =
 				    readl(priv->base + CAN_BUF3_ADDR + i * 4);
@@ -481,10 +441,9 @@ static void sunxi_can_rx(struct net_device *dev)
 	/* release receive buffer */
 	sunxi_can_write_cmdreg(priv, RELEASE_RBUF);
 
-	netif_rx(skb);
-
 	stats->rx_packets++;
 	stats->rx_bytes += cf->can_dlc;
+	netif_rx(skb);
 
 	can_led_event(dev, CAN_LED_EVENT_RX);
 }
@@ -499,8 +458,9 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	u32 ecc, alc;
 
 	skb = alloc_can_err_skb(dev, &cf);
-	if (skb == NULL)
+	if (!skb)
 		return -ENOMEM;
+
 	if (isrc & DATA_OR) {
 		/* data overrun interrupt */
 		netdev_dbg(dev, "data overrun interrupt\n");
@@ -520,8 +480,9 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 			can_bus_off(dev);
 		} else if (status & ERR_STA) {
 			state = CAN_STATE_ERROR_WARNING;
-		} else
+		} else {
 			state = CAN_STATE_ERROR_ACTIVE;
+		}
 	}
 	if (isrc & BUS_ERR) {
 		/* bus error interrupt */
@@ -533,17 +494,17 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 
 		cf->can_id |= CAN_ERR_PROT | CAN_ERR_BUSERROR;
 
-		if (ecc & BIT_ERR)
+		if (ecc & BIT_ERR) {
 			cf->data[2] |= CAN_ERR_PROT_BIT;
-		else if (ecc & FORM_ERR)
+		} else if (ecc & FORM_ERR) {
 			cf->data[2] |= CAN_ERR_PROT_FORM;
-		else if (ecc & STUFF_ERR)
+		} else if (ecc & STUFF_ERR) {
 			cf->data[2] |= CAN_ERR_PROT_STUFF;
-		else {
+		} else {
 			cf->data[2] |= CAN_ERR_PROT_UNSPEC;
 			cf->data[3] = (ecc & ERR_SEG_CODE) >> 16;
 		}
-		/* Error occurred during transmission? */
+		/* error occurred during transmission? */
 		if ((ecc & ERR_DIR) == 0)
 			cf->data[2] |= CAN_ERR_PROT_TX;
 	}
@@ -566,8 +527,10 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	}
 	if (state != priv->can.state && (state == CAN_STATE_ERROR_WARNING ||
 					 state == CAN_STATE_ERROR_PASSIVE)) {
-		u8 rxerr = (readl(priv->base + CAN_ERRC_ADDR) >> 16) & 0xFF;
-		u8 txerr = readl(priv->base + CAN_ERRC_ADDR) & 0xFF;
+		u32 errc = readl(priv->base + CAN_ERRC_ADDR);
+		u8 rxerr = (errc >> 16) & 0xFF;
+		u8 txerr = errc & 0xFF;
+
 		cf->can_id |= CAN_ERR_CRTL;
 		if (state == CAN_STATE_ERROR_WARNING) {
 			priv->can.can_stats.error_warning++;
@@ -583,15 +546,14 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	}
 	priv->can.state = state;
 
-	netif_rx(skb);
-
 	stats->rx_packets++;
 	stats->rx_bytes += cf->can_dlc;
+	netif_rx(skb);
 
 	return 0;
 }
 
-irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
+static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 {
 	struct net_device *dev = (struct net_device *)dev_id;
 	struct sunxican_priv *priv = netdev_priv(dev);
@@ -618,7 +580,8 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		}
 		if (isrc & RBUF_VLD) {
 			/* receive interrupt */
-			while (status & RBUF_RDY) {	/* RX buffer is not empty */
+			while (status & RBUF_RDY) {
+			/* RX buffer is not empty */
 				sunxi_can_rx(dev);
 				status = readl(priv->base + CAN_STA_ADDR);
 			}
@@ -631,7 +594,6 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		}
 		/* clear the interrupt */
 		writel(isrc, priv->base + CAN_INT_ADDR);
-		udelay(10);
 	}
 	if (n >= SUNXI_CAN_MAX_IRQ)
 		netdev_dbg(dev, "%d messages handled in ISR", n);
@@ -639,11 +601,8 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 	return (n) ? IRQ_HANDLED : IRQ_NONE;
 }
 
-EXPORT_SYMBOL_GPL(sunxi_can_interrupt);
-
 static int sunxican_open(struct net_device *dev)
 {
-	struct sunxican_priv *priv = netdev_priv(dev);
 	int err;
 
 	/* set chip into reset mode */
@@ -656,7 +615,7 @@ static int sunxican_open(struct net_device *dev)
 
 	/* register interrupt handler */
 	if (request_irq
-	    (dev->irq, sunxi_can_interrupt, priv->irq_flags, dev->name,
+	    (dev->irq, sunxi_can_interrupt, IRQF_TRIGGER_NONE, dev->name,
 	     (void *)dev)) {
 		netdev_err(dev, "request_irq err: %d\n", err);
 		return -EAGAIN;
@@ -685,13 +644,6 @@ static int sunxican_close(struct net_device *dev)
 	return 0;
 }
 
-void free_sunxicandev(struct net_device *dev)
-{
-	free_candev(dev);
-}
-
-EXPORT_SYMBOL_GPL(free_sunxicandev);
-
 static const struct net_device_ops sunxican_netdev_ops = {
 	.ndo_open = sunxican_open,
 	.ndo_stop = sunxican_close,
@@ -701,7 +653,7 @@ static const struct net_device_ops sunxican_netdev_ops = {
 static const struct of_device_id sunxican_of_match[] = {
 	{.compatible = "allwinner,sunxican"},
 	{},
-}
+};
 
 MODULE_DEVICE_TABLE(of, sunxican_of_match);
 
@@ -792,7 +744,6 @@ static int sunxican_probe(struct platform_device *pdev)
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_BERR_REPORTING |
 	    CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_LOOPBACK |
 	    CAN_CTRLMODE_3_SAMPLES;
-	priv->dev = dev;
 	priv->base = addr;
 	priv->clk = clk;
 	spin_lock_init(&priv->cmdreg_lock);
@@ -874,8 +825,8 @@ static struct platform_driver sunxi_can_driver = {
 
 module_platform_driver(sunxi_can_driver);
 
-MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>, "
-	      "Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
+MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
+MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION(DRV_NAME "CAN driver for Allwinner SoCs (A10/A20)");
 MODULE_VERSION(DRV_MODULE_VERSION);
