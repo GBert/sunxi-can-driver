@@ -1,0 +1,24 @@
+Subject: [PATCH v3 0/2] Allwinner A10/A20 CAN Controller support
+
+Allwinner A10/A20 CAN Controller support
+
+[PATCH v3 1/2] Device Tree Binding Documentation
+[PATCH v3 2/2] Kernel Module
+
+History:
+	v3: changed error state change handling (thx Andri for the hint)
+	    use bittiming function correct (no need to call it)
+	    strip down priv (suggested by Marc)
+	    scripts/checkpatch -> no mathes anymore
+	    sparse -> no errors or warnings anymore
+	v2: cleaning
+	v1: initial
+
+Signed-off-by: Gerhard Bertelsmann < info@gerhard-bertelsmann.de >
+Tested-by: Gerhard Bertelsmann < info@gerhard-bertelsmann.de >
+---
+ .../devicetree/bindings/net/can/sunxi_can.txt       |  42 ++
+ drivers/net/can/Kconfig                            |  10 +
+ drivers/net/can/Makefile                           |   1 +
+ drivers/net/can/sunxi_can.c                        | 834 +++++++++++++++++++++
+ 4 files changed, 887 insertions(+)
