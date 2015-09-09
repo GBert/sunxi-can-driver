@@ -634,6 +634,7 @@ static int sunxican_open(struct net_device *dev)
 			  dev->name, dev);
 	if (err) {
 		netdev_err(dev, "request_irq err: %d\n", err);
+		close_candev(dev);
 		return -EAGAIN;
 	}
 
