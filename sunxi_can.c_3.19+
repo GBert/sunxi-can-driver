@@ -41,7 +41,7 @@
 #include <linux/platform_device.h>
 
 #define DRV_NAME "sunxi_can"
-#define DRV_MODULE_VERSION "0.94"
+#define DRV_MODULE_VERSION "0.98"
 
 /* Registers address */
 #define SUNXI_REG_BASE0		0x01C2BC00
@@ -164,13 +164,13 @@
 #define SUNXI_INTEN_RX		BIT(0)
 
 /* error code */
-#define ERR_INRCV		(0x1 << 5)
-#define ERR_INTRANS		(0x0 << 5)
+#define SUNXI_ERR_INRCV		(0x1 << 5)
+#define SUNXI_ERR_INTRANS	(0x0 << 5)
 
 /* filter mode */
-#define FILTER_CLOSE		0
-#define SINGLE_FLTER_MODE	1
-#define DUAL_FILTER_MODE	2
+#define SINXI_FILTER_CLOSE	0
+#define SUNXI_SINGLE_FLTER_MODE	1
+#define SUNXI_DUAL_FILTER_MODE	2
 
 /* max. number of interrupts handled in ISR */
 #define SUNXI_CAN_MAX_IRQ	20
@@ -198,9 +198,9 @@ static void sunxi_can_write_cmdreg(struct sunxican_priv *priv, u8 val)
 {
 	unsigned long flags;
 
-	 /* The command register needs some locking and time to settle
-	  * the write_reg() operation - especially on SMP systems.
-	  */
+	/* The command register needs some locking and time to settle
+	 * the write_reg() operation - especially on SMP systems.
+	 */
 	spin_lock_irqsave(&priv->cmdreg_lock, flags);
 	writel(val, priv->base + SUNXI_REG_CMD_ADDR);
 	readl(priv->base + SUNXI_REG_STA_ADDR);
@@ -219,7 +219,8 @@ static void set_normal_mode(struct net_device *dev)
 			priv->can.state = CAN_STATE_ERROR_ACTIVE;
 			/* enable interrupts */
 			if (priv->can.ctrlmode & CAN_CTRLMODE_BERR_REPORTING) {
-				writel(0xFFFF, priv->base + SUNXI_REG_INTEN_ADDR);
+				writel(0xFFFF,
+				       priv->base + SUNXI_REG_INTEN_ADDR);
 			} else {
 				writel(0xFFFF & ~SUNXI_INTEN_BERR,
 				       priv->base + SUNXI_REG_INTEN_ADDR);
@@ -230,8 +231,8 @@ static void set_normal_mode(struct net_device *dev)
 				writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
 				       SUNXI_LOOPBACK_MODE,
 				       priv->base + SUNXI_REG_MSEL_ADDR);
-			} else if
-				(priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) {
+			} else if (priv->can.ctrlmode &
+					 CAN_CTRLMODE_LISTENONLY) {
 				/* Put device into listen-only mode */
 				writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
 				       SUNXI_LISTEN_ONLY_MODE,
@@ -240,8 +241,8 @@ static void set_normal_mode(struct net_device *dev)
 			return;
 		}
 		/* set chip to normal mode */
-		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) & (~SUNXI_RESET_MODE),
-		       priv->base + SUNXI_REG_MSEL_ADDR);
+		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) &
+		       (~SUNXI_RESET_MODE), priv->base + SUNXI_REG_MSEL_ADDR);
 		status = readl(priv->base + SUNXI_REG_MSEL_ADDR);
 	}
 	netdev_err(dev, "setting controller into normal mode failed!\n");
@@ -261,7 +262,7 @@ static void set_reset_mode(struct net_device *dev)
 		}
 		/* select reset mode */
 		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
-			SUNXI_RESET_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
+		       SUNXI_RESET_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
 		status = readl(priv->base + SUNXI_REG_MSEL_ADDR);
 	}
 	netdev_err(dev, "setting controller into reset mode failed!\n");
@@ -381,7 +382,8 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		writel((id & 0x7) << 5, priv->base + SUNXI_REG_BUF2_ADDR);
 
 		for (i = 0; i < dlc; i++)
-			writel(cf->data[i], priv->base + SUNXI_REG_BUF3_ADDR + i * 4);
+			writel(cf->data[i],
+			       priv->base + SUNXI_REG_BUF3_ADDR + i * 4);
 	}
 	can_put_echo_skb(skb, dev, 0);
 	sunxi_can_write_cmdreg(priv, SUNXI_CMD_TRANS_REQ);
@@ -420,7 +422,8 @@ static void sunxi_can_rx(struct net_device *dev)
 		} else {
 			for (i = 0; i < cf->can_dlc; i++)
 				cf->data[i] =
-				    readl(priv->base + SUNXI_REG_BUF5_ADDR + i * 4);
+				    readl(priv->base + SUNXI_REG_BUF5_ADDR +
+					  i * 4);
 		}
 	} else {
 		/* standard frame format (SFF) */
@@ -433,7 +436,8 @@ static void sunxi_can_rx(struct net_device *dev)
 		} else {
 			for (i = 0; i < cf->can_dlc; i++)
 				cf->data[i] =
-				    readl(priv->base + SUNXI_REG_BUF3_ADDR + i * 4);
+				    readl(priv->base + SUNXI_REG_BUF3_ADDR +
+					  i * 4);
 		}
 	}
 	cf->can_id = id;
@@ -477,7 +481,8 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		cf->data[1] = CAN_ERR_CRTL_RX_OVERFLOW;
 		stats->rx_over_errors++;
 		stats->rx_errors++;
-		sunxi_can_write_cmdreg(priv, SUNXI_CMD_CLEAR_OR_FLAG);	/* clear bit */
+		/* clear bit */
+		sunxi_can_write_cmdreg(priv, SUNXI_CMD_CLEAR_OR_FLAG);
 	}
 	if (isrc & SUNXI_INT_ERR_WRN) {
 		/* error warning interrupt */
@@ -572,7 +577,8 @@ static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		if (isrc & SUNXI_INT_TBUF_VLD) {
 			/* transmission complete interrupt */
 			stats->tx_bytes +=
-			    readl(priv->base + SUNXI_REG_RBUF_RBACK_START_ADDR) & 0xf;
+			    readl(priv->base +
+				  SUNXI_REG_RBUF_RBACK_START_ADDR) & 0xf;
 			stats->tx_packets++;
 			can_get_echo_skb(dev, 0);
 			netif_wake_queue(dev);
@@ -752,8 +758,8 @@ static int sunxican_probe(struct platform_device *pdev)
 
 	/* enable CAN specific interrupts */
 	set_reset_mode(dev);
-	temp_irqen = SUNXI_INTEN_BERR | SUNXI_INTEN_ERR_PASSIVE | SUNXI_INTEN_OR |
-		     SUNXI_INTEN_RX;
+	temp_irqen = SUNXI_INTEN_BERR | SUNXI_INTEN_ERR_PASSIVE |
+		     SUNXI_INTEN_OR | SUNXI_INTEN_RX;
 	writel(readl(priv->base + SUNXI_REG_INTEN_ADDR) | temp_irqen,
 	       priv->base + SUNXI_REG_INTEN_ADDR);
 
@@ -833,4 +839,3 @@ MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION(DRV_NAME "CAN driver for Allwinner SoCs (A10/A20)");
 MODULE_VERSION(DRV_MODULE_VERSION);
-
