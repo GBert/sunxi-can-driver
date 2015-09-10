@@ -44,7 +44,6 @@
 #define DRV_MODULE_VERSION "0.98"
 
 /* Registers address */
-#define SUNXI_REG_BASE0		0x01C2BC00
 #define SUNXI_REG_MSEL_ADDR	0x0000	/* CAN Mode Select */
 #define SUNXI_REG_CMD_ADDR	0x0004	/* CAN Command */
 #define SUNXI_REG_STA_ADDR	0x0008	/* CAN Status */
@@ -634,6 +633,7 @@ static int sunxican_open(struct net_device *dev)
 			  dev->name, dev);
 	if (err) {
 		netdev_err(dev, "request_irq err: %d\n", err);
+		close_candev(dev);
 		return -EAGAIN;
 	}
 
@@ -832,6 +832,7 @@ static SIMPLE_DEV_PM_OPS(sunxi_can_pm_ops, sunxi_can_suspend, sunxi_can_resume);
 
 static struct platform_driver sunxi_can_driver = {
 	.driver = {
+		.name = DRV_NAME,
 		.owner = THIS_MODULE,
 		.pm = &sunxi_can_pm_ops,
 		.of_match_table = sunxican_of_match,
