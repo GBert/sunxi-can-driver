@@ -1,0 +1,39 @@
+Subject: [PATCH v4 0/2] can: Allwinner A10/A20 CAN Controller support - summary
+
+Hi,
+
+please find attached the next try. Thanks to Marc; AFAIK I have
+worked on all mentioned issues.
+
+[PATCH v4 1/2] Device Tree Binding Documentation
+[PATCH v4 2/2] Kernel Module
+
+History:
+    v4: defines prefixed with SUNXI_
+        sunxi_can_write_cmdreg tweaked
+	loops in set_xxx_mode reworked
+	add return value to set_xxx_mode
+	sunxican_start_xmit reworked
+	struct platform_driver stripped
+	moved set_bittiming into open
+	moved clock start into open
+	add clock stop to close
+        suspend reworked
+        resume reworked
+        fixed double counting bug
+
+    v3: changed error state change handling (thx Andri for the hint)
+        use bittiming function correct (no need to call it)
+        strip down priv (suggested by Marc)
+        scripts/checkpatch.pl-> no matches anymore
+        sparse -> no errors or warnings anymore
+    v2: cleaning
+    v1: initial
+
+Signed-off-by: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
+---
+ .../devicetree/bindings/net/can/sunx_can.txt       |  40 +
+ drivers/net/can/Kconfig                            |  10 +
+ drivers/net/can/Makefile                           |   1 +
+ drivers/net/can/sunxi_can.c                        | 867 +++++++++++++++++++++
+ 4 files changed, 918 insertions(+)

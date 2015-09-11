@@ -823,7 +823,7 @@ static int __maybe_unused sunxi_can_resume(struct device *device)
 
 	err = clk_enable(priv->clk);
 	if (err) {
-	netdev_err(dev, "clk_enable() failed, error %d\n", err);
+		netdev_err(dev, "clk_enable() failed, error %d\n", err);
 		return err;
 	}
 
