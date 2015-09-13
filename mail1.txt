@@ -1,16 +1,15 @@
-Subject: [PATCH v4 1/2] can: Allwinner A10/A20 CAN Controller support - Devicetree bindings
+Subject: [PATCH v5 1/2] can: Allwinner A10/A20 CAN Controller support - Devicetree bindings
 
 Signed-off-by: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
 ---
- .../devicetree/bindings/net/can/sunx_can.txt       |  40 +
- 1 files changed, 40 insertions(+)
+ .../devicetree/bindings/net/can/sunxi_can.txt      |  40 +
+ 1 files changed, 49 insertions(+)
 
-
-diff --git a/Documentation/devicetree/bindings/net/can/sunx_can.txt b/Documentation/devicetree/bindings/net/can/sunx_can.txt
+diff --git a/Documentation/devicetree/bindings/net/can/sunxi_can.txt b/Documentation/devicetree/bindings/net/can/sunxi_can.txt
 new file mode 100644
-index 0000000..5bc1958
+index 0000000..5db9abc
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/net/can/sunx_can.txt
++++ b/Documentation/devicetree/bindings/net/can/sunxi_can.txt
 @@ -0,0 +1,40 @@
 +Allwinner A10/A20 CAN controller Device Tree Bindings
 +-----------------------------------------------------
@@ -29,14 +28,14 @@ index 0000000..5bc1958
 +
 +SoC common .dtsi file:
 +
-+	can0_pins_a: can0 <at> 0 {
++	can0_pins_a: can0@0 {
 +		allwinner,pins = "PH20","PH21";
 +		allwinner,function = "can";
 +		allwinner,drive = <0>;
 +		allwinner,pull = <0>;
 +	};
-+
-+	can0: can <at> 01c2bc00 {
++...
++	can0: can@01c2bc00 {
 +		compatible = "allwinner,sunxican";
 +		reg = <0x01c2bc00 0x400>;
 +		interrupts = <0 26 4>;
@@ -46,7 +45,7 @@ index 0000000..5bc1958
 +
 +Board specific .dts file:
 +
-+	can0: can <at> 01c2bc00 {
++	can0: can@01c2bc00 {
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&can0_pins_a>;
 +		status = "okay";

@@ -1,14 +1,33 @@
-Subject: [PATCH v4 0/2] can: Allwinner A10/A20 CAN Controller support - summary
+Subject: [PATCH v5 0/2] can: Allwinner A10/A20 CAN Controller support - summary
 
 Hi,
 
-please find attached the next try. Thanks to Marc; AFAIK I have
-worked on all mentioned issues.
+please find attached the next try. Thanks to Marc. I've worked on all mentioned
+issues except one: I don't add clk_disable_unprepare in sunxi_can_start. Makes no
+sense to me (driver fails).
 
-[PATCH v4 1/2] Device Tree Binding Documentation
-[PATCH v4 2/2] Kernel Module
+For testers:
+the patch will only apply wihtout modification to kernels 3.19+.
+I've tested the driver (receipt, sending and basic errors). IMHO
+everything is fine. The performance seems to be good - high rates
+(>5000 packets/second) working fine.
+
+Please test and report bugs if exists.
+
+
+[PATCH v5 1/2] Device Tree Binding Documentation
+[PATCH v5 2/2] Kernel Module
 
 History:
+    V5: fix license
+        modify prefix to mode select defines
+        enable and disable clock in sunxican_get_berr_counter
+	delete set_normal_mode at the end of sunxi_can_start
+	removed sunxican_id_table
+	use devm_clk_get instead of clk_get
+	use devm_ioremap_resource to simplify probe and remove
+	make set-normal-mode and set-reset-mode more readable
+        
     v4: defines prefixed with SUNXI_
         sunxi_can_write_cmdreg tweaked
 	loops in set_xxx_mode reworked
@@ -32,8 +51,8 @@ History:
 
 Signed-off-by: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
 ---
- .../devicetree/bindings/net/can/sunx_can.txt       |  40 +
+ .../devicetree/bindings/net/can/sunxi_can.txt      |  40 +
  drivers/net/can/Kconfig                            |  10 +
  drivers/net/can/Makefile                           |   1 +
- drivers/net/can/sunxi_can.c                        | 867 +++++++++++++++++++++
- 4 files changed, 918 insertions(+)
+ drivers/net/can/sunxi_can.c                        | 879 +++++++++++++++++++++
+ 4 files changed, 930 insertions(+)
