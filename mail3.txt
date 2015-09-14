@@ -764,7 +764,7 @@ index 0000000..b8cc89f
 +};
 +
 +static const struct of_device_id sunxican_of_match[] = {
-+	{.compatible = "allwinner,sunxican"},
++	{.compatible = "allwinner,sun4ican"},
 +	{},
 +};
 +

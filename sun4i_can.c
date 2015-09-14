@@ -284,7 +284,7 @@ static int sunxican_set_bittiming(struct net_device *dev)
 	if (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES)
 		cfg |= 0x800000;
 
-	netdev_info(dev, "setting BITTIMING=0x%08x\n", cfg);
+	netdev_dbg(dev, "setting BITTIMING=0x%08x\n", cfg);
 	writel(cfg, priv->base + SUNXI_REG_BTIME_ADDR);
 
 	return 0;
@@ -330,7 +330,7 @@ static int sunxi_can_start(struct net_device *dev)
 	writel(0x00000000, priv->base + SUNXI_REG_ACPC_ADDR);
 	writel(0xFFFFFFFF, priv->base + SUNXI_REG_ACPM_ADDR);
 
-	/* Clear error counters and error code capture */
+	/* clear error counters and error code capture */
 	writel(0, priv->base + SUNXI_REG_ERRC_ADDR);
 
 	/* enable interrupts */
@@ -371,7 +371,7 @@ static int sunxi_can_stop(struct net_device *dev)
 
 	priv->can.state = CAN_STATE_STOPPED;
 	/* we need to enter reset mode */
-	err = set_normal_mode(dev);
+	err = set_reset_mode(dev);
 	if (err) {
 		netdev_err(dev, "could not enter reset mode\n");
 		return err;

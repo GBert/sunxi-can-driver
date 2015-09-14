@@ -27,15 +27,15 @@ index 0000000..b572e2b
 +
 +SoC common .dtsi file:
 +
-+	can0_pins_a: can0 <at> 0 {
++	can0_pins_a: can0@0 {
 +		allwinner,pins = "PH20","PH21";
 +		allwinner,function = "can";
 +		allwinner,drive = <0>;
 +		allwinner,pull = <0>;
 +	};
 +
-+	can0: can <at> 01c2bc00 {
-+		compatible = "allwinner,sunxican";
++	can0: can@01c2bc00 {
++		compatible = "allwinner,sun4ican";
 +		reg = <0x01c2bc00 0x400>;
 +		interrupts = <0 26 4>;
 +		clocks = <&apb1_gates 4>;
@@ -44,7 +44,7 @@ index 0000000..b572e2b
 +
 +Board specific .dts file:
 +
-+	can0: can <at> 01c2bc00 {
++	can0: can@01c2bc00 {
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&can0_pins_a>;
 +		status = "okay";
