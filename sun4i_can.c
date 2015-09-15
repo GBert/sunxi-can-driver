@@ -278,9 +278,9 @@ static int sunxican_set_bittiming(struct net_device *dev)
 	u32 cfg;
 
 	cfg = ((bt->brp - 1) & 0x3FF) |
-	    (((bt->sjw - 1) & 0x3) << 14) |
-	    (((bt->prop_seg + bt->phase_seg1 - 1) & 0xf) << 16) |
-	    (((bt->phase_seg2 - 1) & 0x7) << 20);
+	     (((bt->sjw - 1) & 0x3) << 14) |
+	     (((bt->prop_seg + bt->phase_seg1 - 1) & 0xf) << 16) |
+	     (((bt->phase_seg2 - 1) & 0x7) << 20);
 	if (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES)
 		cfg |= 0x800000;
 
@@ -518,7 +518,7 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	unsigned int rxerr, txerr, errc;
 	u32 ecc, alc;
 
-	/* we can't skip if alloc fail because we want the stats anyhow */
+	/* we don't skip if alloc fail because we want the stats anyhow */
 	skb = alloc_can_err_skb(dev, &cf);
 
 	errc = readl(priv->base + SUNXI_REG_ERRC_ADDR);
