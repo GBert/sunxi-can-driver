@@ -690,8 +690,7 @@ static int sun4ican_open(struct net_device *dev)
 		return err;
 
 	/* register interrupt handler */
-	err = request_irq(dev->irq, sun4i_can_interrupt, IRQF_TRIGGER_NONE,
-			  dev->name, dev);
+	err = request_irq(dev->irq, sun4i_can_interrupt, 0, dev->name, dev);
 	if (err) {
 		netdev_err(dev, "request_irq err: %d\n", err);
 		goto exit_irq;
