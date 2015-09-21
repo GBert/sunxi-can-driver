@@ -71,7 +71,7 @@
 
 #define SUN4I_CAN_BASE		0x01C2BC00
 #define SUN4I_CAN_SIZE		0x0400
-#define SUN4I_CAN_IRQ		28
+#define SUN4I_CAN_IRQ		58	/* 32 + 26 */
 
 /* Registers address (physical base address 0x01C2BC00) */
 #define SUN4I_REG_MSEL_ADDR	0x0000	/* CAN Mode Select */
@@ -899,9 +899,14 @@ static int __init sun4i_can_init(void)
 	err = platform_device_register(&sun4i_can_device);
 	if (err) {
 		printk(KERN_ERR "can't register CAN device\n");
-		return -1;
+		return err;
 	}
-	platform_driver_register(&sun4i_can_driver);
+	err = platform_driver_register(&sun4i_can_driver);
+	if (err) {
+		printk(KERN_ERR "can't register CAN driver\n");
+		return err;
+	}
+
 	return 0;
 }
 
