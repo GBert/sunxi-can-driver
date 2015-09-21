@@ -771,8 +771,6 @@ static struct platform_device sun4i_can_device = {
 	.id		= 0,
 	.resource	= sun4i_can_resources,
 	.num_resources	= ARRAY_SIZE(sun4i_can_resources),
-	.dev = {
-	},
 };
 
 static int sun4ican_remove(struct platform_device *pdev)
@@ -894,7 +892,6 @@ static struct platform_driver sun4i_can_driver = {
 	},
 };
 
-#if 0
 static int __init sun4i_can_init(void)
 {
 	int err;
@@ -904,7 +901,7 @@ static int __init sun4i_can_init(void)
 		printk(KERN_ERR "can't register CAN device\n");
 		return -1;
 	}
-	platform_device_register(&sun4i_can_device);
+	platform_driver_register(&sun4i_can_driver);
 	return 0;
 }
 
@@ -912,14 +909,11 @@ module_init(sun4i_can_init);
 
 static void __exit sun4i_can_exit(void)
 {
+	platform_driver_unregister(&sun4i_can_driver);
 	platform_device_unregister(&sun4i_can_device);
 }
 
 module_exit(sun4i_can_exit);
-#else
-
-module_platform_driver(sun4i_can_driver);
-#endif
 
 MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
 MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
