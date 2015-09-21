@@ -56,15 +56,22 @@
 #include <linux/interrupt.h>
 #include <linux/init.h>
 #include <linux/io.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/of.h>
-#include <linux/of_device.h>
 #include <linux/platform_device.h>
+
+#include <mach/clock.h>
+#include <mach/irqs.h>
+#include <plat/i2c.h>
+#include <plat/platform.h>
+#include <plat/sys_config.h>
+#include <plat/system.h>
 
 #define DRV_NAME "sun4i_can"
 
 #define SUN4I_CAN_BASE		0x01C2BC00
 #define SUN4I_CAN_SIZE		0x0400
+#define SUN4I_CAN_IRQ		28
 
 /* Registers address (physical base address 0x01C2BC00) */
 #define SUN4I_REG_MSEL_ADDR	0x0000	/* CAN Mode Select */
@@ -747,12 +754,26 @@ static const struct net_device_ops sun4ican_netdev_ops = {
 	.ndo_start_xmit = sun4ican_start_xmit,
 };
 
-static const struct of_device_id sun4ican_of_match[] = {
-	{.compatible = "allwinner,sun4i-a10-can"},
-	{},
+static struct resource sun4i_can_resources[] = {
+	{
+		.start  = SUN4I_CAN_BASE,
+		.end	= SUN4I_CAN_BASE + SUN4I_CAN_SIZE,
+		.flags	= IORESOURCE_MEM,
+	}, {
+		.start	= SUN4I_CAN_IRQ,
+		.end	= SUN4I_CAN_IRQ,
+		.flags	= IORESOURCE_IRQ,
+	},
 };
 
-MODULE_DEVICE_TABLE(of, sun4ican_of_match);
+static struct platform_device sun4i_can_device = {
+	.name		= "sun4i-can",
+	.id		= 0,
+	.resource	= sun4i_can_resources,
+	.num_resources	= ARRAY_SIZE(sun4i_can_resources),
+	.dev = {
+	},
+};
 
 static int sun4ican_remove(struct platform_device *pdev)
 {
@@ -794,7 +815,7 @@ static int sun4ican_probe(struct platform_device *pdev)
 	}
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	if (!request_mem_region(SUN4I_CAN_BASE, SUN4I_CAN_SIZE, pdev->name)) {
+	if (!request_mem_region(mem->start, resource_size(mem), pdev->name)) {
 		dev_err(&pdev->dev, "could not get io memory resource\n");
 		err = -EBUSY;
 		goto exit;
@@ -865,15 +886,40 @@ exit:
 }
 
 static struct platform_driver sun4i_can_driver = {
-	.driver = {
-		.name = DRV_NAME,
-		.of_match_table = sun4ican_of_match,
-	},
 	.probe = sun4ican_probe,
 	.remove = sun4ican_remove,
+	.driver = {
+		.name	= "sun4i-can",
+		.owner	= THIS_MODULE,
+	},
 };
 
+#if 0
+static int __init sun4i_can_init(void)
+{
+	int err;
+
+	err = platform_device_register(&sun4i_can_device);
+	if (err) {
+		printk(KERN_ERR "can't register CAN device\n");
+		return -1;
+	}
+	platform_device_register(&sun4i_can_device);
+	return 0;
+}
+
+module_init(sun4i_can_init);
+
+static void __exit sun4i_can_exit(void)
+{
+	platform_device_unregister(&sun4i_can_device);
+}
+
+module_exit(sun4i_can_exit);
+#else
+
 module_platform_driver(sun4i_can_driver);
+#endif
 
 MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
 MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
