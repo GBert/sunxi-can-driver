@@ -798,12 +798,15 @@ static int __devinit sun4ican_probe(struct platform_device *pdev)
 	struct net_device *dev;
 	struct sun4ican_priv *priv;
 
+	printk(KERN_INFO "%s: clk_get\n", __func__);
+
 	clk = clk_get(NULL, "apb1_can");
 	if (!clk) {
 		dev_err(&pdev->dev, "unable to request clock\n");
 		err = -ENODEV;
 		goto exit;
 	}
+	printk(KERN_INFO "%s: get_irq\n", __func__);
 
 	irq = platform_get_irq(pdev, 0);
 	if (irq < 0) {
@@ -812,6 +815,7 @@ static int __devinit sun4ican_probe(struct platform_device *pdev)
 		goto exit;
 	}
 
+	printk(KERN_INFO "%s: iomem\n", __func__);
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!request_mem_region(mem->start, resource_size(mem), pdev->name)) {
 		dev_err(&pdev->dev, "could not get io memory resource\n");
