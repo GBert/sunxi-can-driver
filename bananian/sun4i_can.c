@@ -773,7 +773,7 @@ static struct platform_device sun4i_can_device = {
 	.num_resources	= ARRAY_SIZE(sun4i_can_resources),
 };
 
-static int sun4ican_remove(struct platform_device *pdev)
+static int __devexit sun4ican_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
 	struct sun4ican_priv *priv = netdev_priv(dev);
@@ -789,7 +789,7 @@ static int sun4ican_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static int sun4ican_probe(struct platform_device *pdev)
+static int __devinit sun4ican_probe(struct platform_device *pdev)
 {
 	struct resource *mem;
 	struct clk *clk;
@@ -885,40 +885,14 @@ exit:
 
 static struct platform_driver sun4i_can_driver = {
 	.probe = sun4ican_probe,
-	.remove = sun4ican_remove,
+	.remove = __devexit_p(sun4ican_remove),
 	.driver = {
 		.name	= "sun4i-can",
 		.owner	= THIS_MODULE,
 	},
 };
 
-static int __init sun4i_can_init(void)
-{
-	int err;
-
-	err = platform_device_register(&sun4i_can_device);
-	if (err) {
-		printk(KERN_ERR "can't register CAN device\n");
-		return err;
-	}
-	err = platform_driver_register(&sun4i_can_driver);
-	if (err) {
-		printk(KERN_ERR "can't register CAN driver\n");
-		return err;
-	}
-
-	return 0;
-}
-
-module_init(sun4i_can_init);
-
-static void __exit sun4i_can_exit(void)
-{
-	platform_driver_unregister(&sun4i_can_driver);
-	platform_device_unregister(&sun4i_can_device);
-}
-
-module_exit(sun4i_can_exit);
+module_platform_driver(sun4i_can_driver);
 
 MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
 MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
