@@ -1,16 +1,15 @@
-Subject: [PATCH 1/1] can: Allwinner A10/A20 CAN Controller
+Subject: [PATCH 1/2] can: sunxi: Allwinner A10/A20 CAN Controller
 
-This patch set (linux-next) fixes a bug in arbitration error reporting found by
-Dan Carpenter and the modinfo name (thx to Peter Koorsgard) of the module.
+This patch set (for linux-next) fixes a bug in arbitration error reporting
 
-ef9bd57 general: fix driver info
 e9d2d74 sun4i_can_err: fix arbitration lost error reporting
 
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
 ---
 
- drivers/net/can/sun4i_can.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/can/sun4i_can.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/can/sun4i_can.c b/drivers/net/can/sun4i_can.c
 index 10d8497..d9a42c6 100644
@@ -25,9 +24,3 @@ index 10d8497..d9a42c6 100644
  		}
  	}
  
-@@ -854,4 +854,4 @@ module_platform_driver(sun4i_can_driver);
- MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
- MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
- MODULE_LICENSE("Dual BSD/GPL");
--MODULE_DESCRIPTION(DRV_NAME "CAN driver for Allwinner SoCs (A10/A20)");
-+MODULE_DESCRIPTION("CAN driver for Allwinner SoCs (A10/A20)");
