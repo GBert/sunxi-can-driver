@@ -1,0 +1,15 @@
+--- a/arch/arm/boot/dts/sun7i-a20-bananapi.dts	2015-09-28 12:03:16.160775512 +0200
++++ b/arch/arm/boot/dts/sun7i-a20-bananapi.dts	2015-09-28 12:04:02.315647274 +0200
+@@ -177,6 +177,12 @@
+ 			status = "okay";
+ 		};
+ 
++		can0: can@01c2bc00 {
++			pinctrl-names = "default";
++			pinctrl-0 = <&can0_pins_a>;
++			status = "okay";
++		};
++
+ 		gmac: ethernet@01c50000 {
+ 			pinctrl-names = "default";
+ 			pinctrl-0 = <&gmac_pins_rgmii_a>;
