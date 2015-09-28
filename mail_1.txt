@@ -1,10 +1,9 @@
 Subject: [PATCH 2/2] can: sunxi: Allwinner A10/A20 CAN Controller
 
-Change description of the module.
+change description of the module.
 
 ef9bd57 general: fix driver info
 
-Reported-by: Peter Korsgaard <peter@korsgaard.com>
 Signed-off-by: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
 ---
 

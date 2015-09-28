@@ -1,6 +1,6 @@
 Subject: [PATCH 1/2] can: sunxi: Allwinner A10/A20 CAN Controller
 
-This patch set (for linux-next) fixes a bug in arbitration error reporting
+fixes a bug in arbitration error reporting
 
 e9d2d74 sun4i_can_err: fix arbitration lost error reporting
 
