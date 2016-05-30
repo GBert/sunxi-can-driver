@@ -1,7 +1,7 @@
 sunxi-can-driver
 ================
 
-sunxi CAN controller driver using SocketCAN - first working version (still beta)
-needs devictree changes - examples included
+sun41_can is part of the official Linux kernel since 4.4
 
-Only tested on BananaPi
+Please apply the CAN DTS patches if you need them
+
